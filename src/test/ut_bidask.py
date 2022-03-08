@@ -32,3 +32,17 @@ def get_mock_object(isOdd = False):
       simtrade = 0,
       intraday_odd = 0
     )
+
+
+def trade():
+  log.fatal('TO-DO: set_order not implement yet')
+#TO-DO
+	# contract = api.Contracts.Stocks.TSE.TSE2330
+ #    order = api.Order(price=12,
+ #                  quantity=10,
+ #                  action=sj.constant.Action.Buy,
+ #                  price_type=sj.constant.StockPriceType.LMT,
+ #                  order_type=sj.constant.TFTOrderType.ROD,
+ #                  account=api.stock_account
+ #                  )
+ #    trade = api.place_order(contract, order)

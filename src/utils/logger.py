@@ -1,5 +1,5 @@
 def show(type, msg):
-  print('>> ['+type+']: '+ msg)
+  print('>> ['+type+']\t: '+ msg)
 
 def info(msg):
   show('info', msg)
