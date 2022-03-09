@@ -132,3 +132,6 @@ dmypy.json
 #customized
 secret.json
 */secret.json
+Sinopac.pfx
+*/Sinopac.pfx
+*.pkl

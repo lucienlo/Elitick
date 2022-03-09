@@ -13,17 +13,28 @@ def login():
     log.info(str('login ' + str(secret['acc'])))
 
     handle = sj.Shioaji()
-    handle.login(
+    result = handle.login(
       person_id = secret['acc'], 
       passwd = secret['pwd'], 
       contracts_cb = lambda security_type: log.info(f"{repr(security_type)} fetch done.")
     )
+    if result == False:
+      log.fatal('login fail')
+      return None
 
-    # handle.activate_ca(
-    #   ca_path = secret['ca'],
-    #   ca_passwd = secret['ca_pwd'],
-    #   person_id = secret['ca_pid'],
-    # )
+    log.info('load ca')
+    result = handle.activate_ca(
+      ca_path = secret['ca'],
+      ca_passwd = secret['ca_pwd'],
+      person_id = secret['ca_pid'],
+    )
+
+    if result == False:
+      log.fatal('ca fail')
+      return None
+
+
+
 
     return handle
 

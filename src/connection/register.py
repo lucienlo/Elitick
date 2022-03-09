@@ -27,7 +27,14 @@ def start_watch_bid_ask(handle, isMock = False):
   if not isMock:
     handle.quote.set_on_bidask_stk_v1_callback(quote_callback)
 
-def set_order(info ,order_cb):
+def set_buy_order(info ,order_cb):
+  isOdd = True
+
+  log.fatal('TO-DO: register.set_order not implement yet')
+  result = None
+  order_cb(result)
+
+def set_sell_order(info ,order_cb):
   log.fatal('TO-DO: register.set_order not implement yet')
   result = None
   order_cb(result)

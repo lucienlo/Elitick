@@ -35,5 +35,5 @@ def mock_ut():
   register.quote_callback(None, ut_bidask.get_mock_object(isOdd = False))
 
 if __name__ == "__main__":
-  main()
-  # mock_ut()
+   main()
+  #mock_ut()

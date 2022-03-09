@@ -30,22 +30,15 @@ def calculate(buy:Decimal, sell:Decimal, amount:int):
 def order_cb(result):
   log.fatal('TO-DO: order_cb not implement yet')
 
-def set_order(type: str, id: str, price: int, amount: int):
-  log.fatal('TO-DO: set_order not implement yet')
-  info = None
-  register.set_order(info ,order_cb)
-
-def cancel_order():
-  log.fatal('TO-DO: cancel_order not implement yet')
-  info = None
-  register.cancel_order(info ,order_cb)
 
 def action(id: str, buy_price: int, sell_price: int, amount: int):
-  log.fatal('TO-DO: action not implement yet')
-  if set_order('sell', 2330, buy_price, 999) == 'Complete':
-  	return set_order('buy', 2330, sell_price, 1) == 'Complete'
+  if register.set_sell_order(2330, buy_price, 999, order_cb) == 'Complete':
+  	return register.set_buy_order(2330, sell_price, 1000, , order_cb) == 'Complete'
 
   return False
+
+def vaild(benifit, want):
+  return benifit <= want and g_sell.ask_volume[0] < g_buy.ask_volume[0] * 2000
 
 def try_earn(want: Decimal):
   global g_sell
@@ -55,12 +48,16 @@ def try_earn(want: Decimal):
     log.warning('not complete set \'sell\' or \'buy\' component')
     return False
 
-  benifit = calculate(g_buy.bid_price[0], g_sell.ask_price[0], 1000)
-  log.info('buy entire: ' + str(g_buy.bid_price[0]) + ', sell odd: ' + str(g_sell.ask_price[0]) + ', can earn: '+ str(benifit))
-  if benifit <= want:
+  benifit = calculate(g_buy.ask_price[0], g_sell.ask_price[0], 1000)
+  log.info('buy entire: ' + str(g_buy.ask_price[0]) + '(' + str(g_buy.ask_volume[0]) + '), ' +
+           'sell odd: ' + str(g_sell.ask_price[0]) + '(' + str(g_sell.ask_volume[0]) + '), ' +
+           'can earn: '+ str(benifit))
+
+  if benifit <= want and g_sell.ask_volume[0] < g_buy.ask_volume[0] * 2000: #to do, judgement whether can action.
     return False
 
-  return action('2330', g_buy.bid_price[0], g_sell.ask_price[0], 1000)
+  return action('2330', g_buy.ask_price[0], g_sell.ask_price[0], 1000)
+  # return True
 
 def update(bidask:BidAskSTKv1):
   global g_sell
@@ -71,4 +68,5 @@ def update(bidask:BidAskSTKv1):
   else:
     g_buy = bidask
 
+  log.toObj(bidask)
   try_earn(ERAN_TARGET)
