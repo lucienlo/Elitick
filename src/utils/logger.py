@@ -1,20 +1,27 @@
 #python STL
 import pickle
 
-def show(type, msg):
+debug = True
+
+def __show(type, msg):
   print('>> ['+type+']\t: '+ msg)
 
+def verbose(msg):
+  if debug:
+  	__show('verbose', msg)
+
 def info(msg):
-  show('info', msg)
+  __show('info', msg)
 
 def warning(msg):
-  show('warning', msg)
+  __show('warning', msg)
 
 def error(msg):
-  show('error', msg)
+  __show('error', msg)
 
 def fatal(msg):
-  show('fatal', msg)
+  __show('fatal', msg)
+
 
 def toObj(obj):
   with open('bid_and_ask_history.pkl', 'ab+') as f:

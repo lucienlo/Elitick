@@ -6,10 +6,10 @@ import shioaji as sj
 # import pandas as pd
 from shioaji import BidAskSTKv1, Exchange
 
-from src.connection import auth, register
-from src.utils import logger as log
-from src.strategy import arbitrage as arbi
-from src.test import ut_bidask
+from src.Connection import Auth, Register
+from src.Utils import Logger as log
+from src.Strategy import Arbitrage as arbi
+from src.Test import ut_bidask
 
 
 def main():
@@ -28,12 +28,22 @@ def main():
 
 
 def mock_ut():
-  register.start_watch_bid_ask(handle = None, isMock = True)
+  handle = Auth.login()
+  is_mock = True
 
-  #simulate the data update
-  register.quote_callback(None, ut_bidask.get_mock_object(isOdd = True))
-  register.quote_callback(None, ut_bidask.get_mock_object(isOdd = False))
+  monitor = Register.Monitor(handle = handle, is_mock = is_mock)
+  tse2330 = Register.Stock(handle = handle, stock_id = '2330', is_mock = is_mock)
+  tse3227 = Register.Stock(handle = handle, stock_id = '3327', is_mock = is_mock)
+  monitor.add_subscriber(tse2330, monitor.cb_trade_manager)
+  monitor.add_subscriber(tse3227, monitor.cb_trade_manager)
+
+  monitor.start()
+
+  log.info("all setting done, it's listening...")
+  threading.Event().wait()
+  logout(handle)
+
 
 if __name__ == "__main__":
-   main()
-  #mock_ut()
+  #main()
+  mock_ut()

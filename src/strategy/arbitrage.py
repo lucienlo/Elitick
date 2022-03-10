@@ -2,8 +2,8 @@
 from shioaji import BidAskSTKv1, Exchange
 
 # local
-from src.utils import logger as log
-from src.connection import register
+from src.Utils import Logger as log
+from src.Connection import Register
 
 # python STL
 from decimal import *
@@ -21,6 +21,7 @@ DISCOUNT = Decimal(0.65)
 SELL_FEE = TRADE_FEE * DISCOUNT + TRADE_TAX
 BUY_FEE = TRADE_FEE * DISCOUNT
 
+
 def calculate(buy:Decimal, sell:Decimal, amount:int):
   cost = sell * SELL_FEE + buy * BUY_FEE
   earn = sell - buy
@@ -31,16 +32,16 @@ def order_cb(result):
   log.fatal('TO-DO: order_cb not implement yet')
 
 
-def action(id: str, buy_price: int, sell_price: int, amount: int):
-  if register.set_sell_order(2330, buy_price, 999, order_cb) == 'Complete':
-  	return register.set_buy_order(2330, sell_price, 1000, , order_cb) == 'Complete'
+def action(stock_id: str, buy_price: int, sell_price: int, amount: int):
+  # if register.set_sell_order(stock_id, buy_price, 999, order_cb) == 'Complete':
+  # 	return register.set_buy_order(stock_id, sell_price, 1000, order_cb) == 'Complete'
 
   return False
 
 def vaild(benifit, want):
   return benifit <= want and g_sell.ask_volume[0] < g_buy.ask_volume[0] * 2000
 
-def try_earn(want: Decimal):
+def try_earn(stock_id: str, want: Decimal):
   global g_sell
   global g_buy
 
@@ -56,8 +57,8 @@ def try_earn(want: Decimal):
   if benifit <= want and g_sell.ask_volume[0] < g_buy.ask_volume[0] * 2000: #to do, judgement whether can action.
     return False
 
-  return action('2330', g_buy.ask_price[0], g_sell.ask_price[0], 1000)
-  # return True
+  return action(stock_id, g_buy.ask_price[0], g_sell.ask_price[0], 1000)
+  return True
 
 def update(bidask:BidAskSTKv1):
   global g_sell

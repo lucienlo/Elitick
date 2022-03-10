@@ -2,7 +2,7 @@ import shioaji as sj
 
 import json
 
-from src.utils import logger as log
+from src.Utils import Logger as log
 
 def login():
   try:
@@ -32,9 +32,6 @@ def login():
     if result == False:
       log.fatal('ca fail')
       return None
-
-
-
 
     return handle
 
