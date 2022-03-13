@@ -135,3 +135,5 @@ secret.json
 Sinopac.pfx
 */Sinopac.pfx
 *.pkl
+logs/
+.DS_Store

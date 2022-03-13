@@ -1,0 +1,64 @@
+#python STL
+import pickle
+import threading
+from src.Utils.LogInstance import *
+from datetime import datetime, timezone, timedelta
+tz = timezone(timedelta(hours=+8))
+
+debug = True
+
+class Logger:
+  def __show(self, type:str, msg: str):
+    formatted = str(datetime.now(tz).strftime("%Y-%m-%d %H:%M:%S")) + '  ' + type + \
+                ' ' + str(self.tid).ljust(5) + ' ' +self.label.ljust(15) + ' : ' + msg
+    self.file.log_file.write(formatted+'\n')
+    print(formatted)
+
+
+  def __init__(self, label: str):
+    self.file = LogInstance(str(datetime.now(tz).strftime("%Y%m%d%H%M%S")))
+    self.label = label
+    self.tid = 0
+
+    try:
+      self.tid = threading.local().threadid
+    except AttributeError:
+      import ctypes
+      libc = ctypes.cdll.LoadLibrary('libc.so.6')
+      SYS_gettid = 186
+      self.tid = threading.local().threadid = libc.syscall(SYS_gettid)
+    self.__show(type = 'V', msg = 'Add logger')
+
+
+  def __del__(self):
+    self.__show(type = 'V', msg = 'Del logger')
+    self.file.log_file.flush()
+    self.file.pkl_file.flush()
+    self.file.log_file.close()
+    self.file.pkl_file.close()
+
+
+  def verbose(self, msg: str):
+    if debug:
+      self.__show('V', msg)
+
+
+  def info(self, msg: str):
+    self.__show('I', msg)
+
+
+  def warning(self, msg: str):
+    self.__show('W', msg)
+
+
+  def error(self, msg: str):
+    self.__show('E', msg)
+
+
+  def fatal(self, msg: str):
+    self.__show('F', msg)
+
+  def record(self, obj):
+    pickle.dump(obj, self.file.pkl_file, pickle.HIGHEST_PROTOCOL)
+  
+
