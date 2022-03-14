@@ -19,7 +19,8 @@ class Performer:
     self.is_alive = False
 
   def __thread_action_watchdog(self):
-    timer = 10000
+    timestamp = time.time()
+
     while self.is_alive:
       stock_id = self.strategy.get_can_earn_id()
       if stock_id != None:
@@ -27,10 +28,9 @@ class Performer:
       else:
         time.sleep(0.001)
       
-      timer = timer -1
-      if timer == 0:
+      if (time.time() - timestamp) >= 10:
         self.log.verbose('Performer watchdog is still working')
-        timer = 10000
+        timestamp = time.time()
 
 
   def start(self):

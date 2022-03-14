@@ -3,6 +3,7 @@ import pickle
 import threading
 from src.Utils.LogInstance import *
 from datetime import datetime, timezone, timedelta
+
 tz = timezone(timedelta(hours=+8))
 
 debug = True
@@ -27,15 +28,11 @@ class Logger:
       libc = ctypes.cdll.LoadLibrary('libc.so.6')
       SYS_gettid = 186
       self.tid = threading.local().threadid = libc.syscall(SYS_gettid)
-    self.__show(type = 'V', msg = 'Add logger')
 
 
   def __del__(self):
-    self.__show(type = 'V', msg = 'Del logger')
     self.file.log_file.flush()
     self.file.pkl_file.flush()
-    self.file.log_file.close()
-    self.file.pkl_file.close()
 
 
   def verbose(self, msg: str):

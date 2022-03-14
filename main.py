@@ -13,23 +13,26 @@ from src.Utils.Logger import Logger
 from src.Strategy.Arbitrage import *
 from src.Test import ut_bidask
 
+
+from src.Test.ArbitrageTest import *
+
 account = Account()
 log = None
 filter_out = ['3227', '00673R']
 
 def main():
+  log = Logger('Main')
   global account
   handle = account.login()
-  is_mock = True
 
-  monitor = Monitor(handle = handle, is_mock = is_mock)
+  monitor = Monitor(handle = handle)
   executor = Performer(monitor, Arbitrage(monitor))
   
   for balance in account.get_stock_balances():
     if balance.code in filter_out:
       log.warning('Pass stock_id: ' + str(balance.code)+ ',\t quantity: '+ str(balance.quantity) + '\t')
       continue
-    cur_stock = Stock(handle = handle, stock_id = balance.code, available_entire_quantity = balance.yd_quantity, is_mock = is_mock)
+    cur_stock = Stock(handle = handle, stock_id = balance.code, available_entire_quantity = balance.yd_quantity)
     monitor.add_subscriber(cur_stock, monitor.cb_trade_manager)
     log.info('Add stock_id: ' + str(balance.code)+ ',\t quantity: '+ str(balance.quantity) + '\tto monitor')
 
@@ -42,15 +45,15 @@ def main():
 
 
 def main_listen_only():
+  log = Logger('Main')
   global account
   handle = account.login()
-  is_mock = True
 
-  monitor = Monitor(handle = handle, is_mock = is_mock)
+  monitor = Monitor(handle = handle)
   # executor = Performer(monitor, Arbitrage(monitor))
   
   for balance in account.get_stock_balances():
-    cur_stock = Stock(handle = handle, stock_id = balance.code, available_entire_quantity = balance.yd_quantity, is_mock = is_mock)
+    cur_stock = Stock(handle = handle, stock_id = balance.code, available_entire_quantity = balance.yd_quantity)
     monitor.add_subscriber(cur_stock, monitor.cb_trade_manager)
     log.info('Add stock_id: ' + str(balance.code)+ ',\t quantity: '+ str(balance.quantity) + '\tto monitor')
 
@@ -63,14 +66,12 @@ def main_listen_only():
 
 
 def mock_ut():
-  log.fatal('not yet implement UT')
-  threading.Event().wait()
-  log.info("exit ok")
+  ArbitrageTest().test_all()
+  # log.info("exit ok")
 
 if __name__ == "__main__":
-  log = Logger('Main')
-  # main()
-  main_listen_only()
+  main()
+  # main_listen_only()
   # mock_ut()
   
 

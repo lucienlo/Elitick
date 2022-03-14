@@ -14,11 +14,10 @@ from src.Strategy import Arbitrage as arbi
 debug = False
 
 class Stock:
-  def __init__(self, handle, stock_id: str, available_entire_quantity: float, is_mock: bool = False):
+  def __init__(self, handle, stock_id: str, available_entire_quantity: float):
     self.log = Logger(self.__class__.__name__)
 
     self.bidask_mutex = threading.Lock()
-    self.is_mock = is_mock
 
     self.handle = handle
     self.id = stock_id
@@ -67,24 +66,24 @@ class Stock:
     
 
   def update_bid_ask(self, bidask: BidAskSTKv1):
-    bidask_mutex.acquire() # mutex protect - start
+    self.bidask_mutex.acquire() # mutex protect - start
 
     if bidask.intraday_odd == 1:
       self.bidask['odd'] = bidask
     else:
       self.bidask['entire'] = bidask
 
-    bidask_mutex.release() # mutex protect - end
-    self.log.verbose(bidask)
+    self.bidask_mutex.release() # mutex protect - end
+    #self.log.verbose(str(bidask))
 
 
   def sync_order(self):
     self.handle.update_status(self.handle.stock_account)
 
 
-  def cancel_order(self, order_handle):
+  def cancel_order(self, trade):
     sync_order()
-    ret = self.handle.cancel_order(order_handle)
+    ret = self.handle.cancel_order(trade)
     sync_order()
     return ret.status.status == sj.constant.Status.Cancelled
 
@@ -127,7 +126,7 @@ class Stock:
 
 
 class Monitor:
-  def __init__(self, handle: Shioaji, is_mock: bool = False):
+  def __init__(self, handle: Shioaji):
     self.log = Logger(self.__class__.__name__)
 
     self.is_alive = True
@@ -151,25 +150,29 @@ class Monitor:
 
 
   def __thread_trade_watchdog(self):
-    timer = 100
+    timestamp = time.time()
     while self.is_alive:
-      self.handle.update_status(self.handle.stock_account)
+      try:
+        self.handle.update_status(self.handle.stock_account)
+      except:
+        self.log.error('oops! can not successfully get the remote updated status.')
       tlist = self.handle.list_trades()
  
       for trade in tlist:
         self.trade_list[trade.order.id] = trade
 
       time.sleep(0.1)
-      timer = timer -1
-      if timer == 0:
+      if (time.time() - timestamp) >= 10:
         self.log.verbose('Monitor watchdog is still working')
-        timer = 100
+        timestamp = time.time()
 
   def add_subscriber(self, stock: Stock, trade_cb):
     self.stock_list[stock.id] = stock
     self.stock_list[stock.id].set_subscriber(trade_cb)
 
   def get_stock(self, stock_id: str):
+    if stock_id not in self.stock_list:
+      return None
     return self.stock_list[stock_id]
 
   def start(self):
