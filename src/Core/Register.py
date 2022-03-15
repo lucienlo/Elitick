@@ -126,9 +126,9 @@ class Stock:
 
 
 class Monitor:
-  def __init__(self, handle: Shioaji):
+  def __init__(self, handle: Shioaji, refresh_sec = 0.05):
     self.log = Logger(self.__class__.__name__)
-
+    self.refresh_sec = refresh_sec
     self.is_alive = True
 
     self.handle = handle
@@ -147,7 +147,7 @@ class Monitor:
   
   def cb_trade_manager(self, trade: Trade):
     self.trade_list[trade.order.id] = trade
-
+    self.log.record(trade)
 
   def __thread_trade_watchdog(self):
     timestamp = time.time()
@@ -161,19 +161,22 @@ class Monitor:
       for trade in tlist:
         self.trade_list[trade.order.id] = trade
 
-      time.sleep(0.1)
+      time.sleep(self.refresh_sec)
       if (time.time() - timestamp) >= 10:
         self.log.verbose('Monitor watchdog is still working')
         timestamp = time.time()
+
 
   def add_subscriber(self, stock: Stock, trade_cb):
     self.stock_list[stock.id] = stock
     self.stock_list[stock.id].set_subscriber(trade_cb)
 
+
   def get_stock(self, stock_id: str):
     if stock_id not in self.stock_list:
       return None
     return self.stock_list[stock_id]
+
 
   def start(self):
     self.handle.quote.set_on_bidask_stk_v1_callback(self.__cb_bid_ask_manager)

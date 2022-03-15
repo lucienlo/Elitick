@@ -11,14 +11,14 @@ from src.Core.Auth import Account
 from src.Core.Register import *
 from src.Utils.Logger import Logger
 from src.Strategy.Arbitrage import *
-from src.Test import ut_bidask
 
 
 from src.Test.ArbitrageTest import *
 
 account = Account()
 log = None
-filter_out = ['3227', '00673R']
+# filter_out = ['3227', '00673R']
+filter_out = []
 
 def main():
   log = Logger('Main')
@@ -50,6 +50,7 @@ def main_listen_only():
   handle = account.login()
 
   monitor = Monitor(handle = handle)
+  # monitor = Monitor(handle = handle, refresh_sec = 0.25)
   # executor = Performer(monitor, Arbitrage(monitor))
   
   for balance in account.get_stock_balances():

@@ -132,6 +132,24 @@ class MockStock(Register.Stock):
 
 
 class MockMonitor(Register.Monitor):
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self.streaming = dict()
+    self.__load_simulation_data('/home/work/src/Test/Asset/simulation.pkl')
+
+
+  def __load_simulation_data(self, path):
+    self.log.info('load simulation data from \'' + path + '\'')
+    data = self.log.load_pkl(path)
+    for obj in data:
+      obj_type = type(obj)
+      if obj_type not in self.streaming:
+        self.streaming[obj_type] = list()
+
+      self.streaming[obj_type].append(obj)
+    self.log.info('load simulation data done!')
+
+
   def get_stock(self, stock_id: str):
     self.trade_list['2bc5ae85'] = g_trade
     if stock_id not in self.stock_list:

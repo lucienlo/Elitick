@@ -31,8 +31,11 @@ class Logger:
 
 
   def __del__(self):
-    self.file.log_file.flush()
-    self.file.pkl_file.flush()
+    if not self.file.log_file.closed:
+      self.file.log_file.flush()
+
+    if not self.file.pkl_file.closed:
+      self.file.pkl_file.flush()
 
 
   def verbose(self, msg: str):
@@ -55,7 +58,19 @@ class Logger:
   def fatal(self, msg: str):
     self.__show('F', msg)
 
+
   def record(self, obj):
     pickle.dump(obj, self.file.pkl_file, pickle.HIGHEST_PROTOCOL)
+
+  def load_pkl(self, path):
+    data = []
+    with open(path, 'rb') as f:
+      while True:
+        try:
+          data.append(pickle.load(f))
+        except EOFError:
+          return data
+    return data
+
   
 
