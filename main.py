@@ -49,8 +49,8 @@ def main_listen_only():
   global account
   handle = account.login()
 
-  monitor = Monitor(handle = handle)
-  # monitor = Monitor(handle = handle, refresh_sec = 0.25)
+  # monitor = Monitor(handle = handle)
+  monitor = Monitor(handle = handle, refresh_sec = 0.25)
   # executor = Performer(monitor, Arbitrage(monitor))
   
   for balance in account.get_stock_balances():

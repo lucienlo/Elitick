@@ -1,6 +1,7 @@
 # python STL
 from decimal import *
 import time
+import threading
 
 # pip installed
 from shioaji import BidAskSTKv1, Exchange
@@ -11,7 +12,7 @@ from src.Core.Register import *
 
 class Arbitrage:
   def __init__(self, monitor, trade_fee: Decimal= Decimal(0.001425), trade_tax: Decimal = Decimal(0.003), \
-                     fee_discount: Decimal = Decimal(0.65), target_benifit: float = 0):
+                     fee_discount: Decimal = Decimal(0.4), target_benifit: float = 0):
     self.log = Logger(self.__class__.__name__)
     #static value
     self.safe_entire_odd_ratio = 2
@@ -20,6 +21,7 @@ class Arbitrage:
     self.trade_odd_quantity = 999
 
     self.monitor = monitor
+    self.transcation_mutex = dict()
 
     self.target_benifit = target_benifit
     self.sell_fee_tax = trade_fee * fee_discount + trade_tax
@@ -33,6 +35,7 @@ class Arbitrage:
 
 
   def can_earn(self, stock_id: str):
+
     stock = self.monitor.get_stock(stock_id)
     if stock == None: #error handle
       return False
@@ -52,10 +55,15 @@ class Arbitrage:
 
 
   def action(self, stock_id: str):
+    if stock_id not in self.transcation_mutex:
+      self.transcation_mutex[stock_id] = threading.Lock()
+
+    self.transcation_mutex[stock_id].acquire()
     self.log.info('start action: '+stock_id)
 
     if self.can_earn(stock_id) == False:
       self.log.fatal(stock_id + ' can not earn any more, you have to check the entire processing flow.')
+      self.transcation_mutex[stock_id].release()
       return False
 
     # SELL: register sell odd stocks
@@ -81,7 +89,9 @@ class Arbitrage:
       if (not self.can_earn(stock_id)) or (bidask['odd'].ask_price[0] != sell_odd_price) or (bidask['entire'].ask_price[0] != buy_entire_price):
         self.log.warning('detect the new case, cancel the submitted sell order')
         cancel_trade = stock.cancel_order(sell_trade)
-        self.log.verbose(cancel_trade)
+        self.log.verbose(str(cancel_trade))
+
+        self.transcation_mutex[stock_id].release()
         return False
       # print the message peroidly
       time.sleep(0.001)
@@ -109,11 +119,14 @@ class Arbitrage:
     self.monitor.stock_list[stock_id].available_entire_quantity = \
       round(self.monitor.stock_list[stock_id].available_entire_quantity - (self.trade_odd_quantity * 0.001), 3)
     self.log.info('stock ' + str(stock_id) + ' remaining quantity = ' + str(self.monitor.stock_list[stock_id].available_entire_quantity))
+
+    self.transcation_mutex[stock_id].release()
     return True
 
   def get_can_earn_id(self) -> str:
     for stock_id in self.monitor.stock_list:
-      if self.can_earn(stock_id):
+      if (stock_id not in self.transcation_mutex or (stock_id in self.transcation_mutex and not self.transcation_mutex[stock_id].locked())) and \
+          self.can_earn(stock_id):
         self.log.info('get can earn stock ' + stock_id)
         return stock_id
     return None

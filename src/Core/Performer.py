@@ -23,8 +23,10 @@ class Performer:
 
     while self.is_alive:
       stock_id = self.strategy.get_can_earn_id()
+
       if stock_id != None:
-        self.strategy.action(stock_id)
+        threading.Thread(target = self.strategy.action, args=(stock_id, )).start() # one shot action
+        # self.strategy.action(stock_id)
       else:
         time.sleep(0.001)
       

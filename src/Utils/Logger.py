@@ -62,6 +62,7 @@ class Logger:
   def record(self, obj):
     pickle.dump(obj, self.file.pkl_file, pickle.HIGHEST_PROTOCOL)
 
+
   def load_pkl(self, path):
     data = []
     with open(path, 'rb') as f:

@@ -1,3 +1,5 @@
+import threading
+
 from src.Strategy.Arbitrage import Arbitrage
 from src.Core.Register import *
 from src.Test.Mock.Struct import *
@@ -19,6 +21,8 @@ class ArbitrageTest:
 
   def test_action(self):
     component = Arbitrage(self.mointor)
+    stock_id = '2330'
+    threading.Thread(target = component.action, args=(stock_id, )).start() 
     component.action('2330')
     component.action('2330')
     component.action('2330')

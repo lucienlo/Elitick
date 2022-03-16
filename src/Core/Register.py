@@ -78,13 +78,24 @@ class Stock:
 
 
   def sync_order(self):
-    self.handle.update_status(self.handle.stock_account)
-
+    try:
+      self.handle.update_status(self.handle.stock_account)
+    except:
+      self.log.error('oops! can not successfully get the remote updated status.')
+      return False
+    return True
 
   def cancel_order(self, trade):
-    sync_order()
+    while self.sync_order() == False:
+      time.sleep(0.001)
+      self.log.warning('cancel_order try to sync order again (before cancel).')
+
     ret = self.handle.cancel_order(trade)
-    sync_order()
+
+    while self.sync_order() == False:
+      time.sleep(0.001)
+      self.log.warning('cancel_order try to sync order again (after cancel).')
+
     return ret.status.status == sj.constant.Status.Cancelled
 
 
