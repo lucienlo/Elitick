@@ -4,7 +4,7 @@ import time
 
 # pip installed
 import shioaji as sj
-from shioaji import BidAskSTKv1, Exchange, Shioaji
+from shioaji import BidAskSTKv1, TickSTKv1, Exchange, Shioaji
 from shioaji.order import Trade
 
 # local
@@ -18,11 +18,13 @@ class Stock:
     self.log = Logger(self.__class__.__name__)
 
     self.bidask_mutex = threading.Lock()
+    self.tick_mutex = threading.Lock()
 
     self.handle = handle
     self.id = stock_id
     self.contract = self.handle.Contracts.Stocks[stock_id]
     self.bidask = {'entire': None, 'odd': None}
+    self.tick = {'entire': None, 'odd': None}
     self.trade_cb = None
 
     # available entire quantity
@@ -32,7 +34,7 @@ class Stock:
   def set_subscriber(self, trade_cb):
     self.trade_cb = trade_cb
 
-    # listen for complete stock (1000 units)
+    # listen bid&ask for complete stock (1000 units)
     self.handle.quote.subscribe(
       self.contract, 
       quote_type = sj.constant.QuoteType.BidAsk,
@@ -40,7 +42,7 @@ class Stock:
       intraday_odd = True
     )
 
-    # listen for odd stock (1 unit)
+    # listen bid&ask for odd stock (1 unit)
     self.handle.quote.subscribe(
       self.contract,
       quote_type = sj.constant.QuoteType.BidAsk,
@@ -48,8 +50,24 @@ class Stock:
       intraday_odd = False
     )
 
+    # listen tick for complete stock (1000 units)
+    self.handle.quote.subscribe(
+      self.contract,
+      quote_type = sj.constant.QuoteType.Tick,
+      version = sj.constant.QuoteVersion.v1,
+      intraday_odd = True
+    )
 
-  def get_bid_ask(self, key = None):
+    # listen tick for odd stock (1 unit)
+    self.handle.quote.subscribe(
+      self.contract,
+      quote_type = sj.constant.QuoteType.Tick,
+      version = sj.constant.QuoteVersion.v1,
+      intraday_odd = False
+    )
+
+
+  def get_bid_ask(self, key: str = None) -> BidAskSTKv1:
     ret = None
     self.bidask_mutex.acquire() # mutex protect - start
 
@@ -77,6 +95,34 @@ class Stock:
     #self.log.verbose(str(bidask))
 
 
+  def get_tick(self, key: str = None) -> TickSTKv1:
+    ret = None
+    self.tick_mutex.acquire() # mutex protect - start
+
+    if key == 'entire':
+      ret = self.tick['entire']
+    elif key == 'odd':
+      ret = self.tick['odd']
+    else:
+      ret = self.tick
+
+    self.tick_mutex.release() # mutex protect - end
+    
+    return ret
+
+
+  def update_tick(self, tick:TickSTKv1):
+    self.tick_mutex.acquire() # mutex protect - start
+
+    if tick.intraday_odd == 1:
+      self.tick['odd'] = tick
+    else:
+      self.tick['entire'] = tick
+
+    self.tick_mutex.release() # mutex protect - end
+    #self.log.verbose(str(tick))
+
+
   def sync_order(self):
     try:
       self.handle.update_status(self.handle.stock_account)
@@ -85,7 +131,8 @@ class Stock:
       return False
     return True
 
-  def cancel_order(self, trade):
+
+  def cancel_order(self, trade: Trade):
     while self.sync_order() == False:
       time.sleep(0.001)
       self.log.warning('cancel_order try to sync order again (before cancel).')
@@ -137,7 +184,7 @@ class Stock:
 
 
 class Monitor:
-  def __init__(self, handle: Shioaji, refresh_sec = 0.05):
+  def __init__(self, handle: Shioaji, refresh_sec: float = 0.05):
     self.log = Logger(self.__class__.__name__)
     self.refresh_sec = refresh_sec
     self.is_alive = True
@@ -147,18 +194,27 @@ class Monitor:
     self.trade_list = dict()
     self.__t_watchdog = None
 
+
   def __del__(self):
     self.is_alive = False
+    if self.__t_watchdog != None:
+      self.__t_watchdog.join()
+
 
   def __cb_bid_ask_manager(self, exchange: Exchange, bidask: BidAskSTKv1):
-    ### TO-DO: Here shall only update the information, do not do so many operations.
-    #          If it needs, create another handle thread to do.
     self.stock_list[bidask.code].update_bid_ask(bidask)
     self.log.record(bidask)
+
+
+  def __cb_tick_manager(self, exchange: Exchange, tick:TickSTKv1):
+    self.stock_list[tick.code].update_tick(tick)
+    self.log.record(tick)
+
   
   def cb_trade_manager(self, trade: Trade):
     self.trade_list[trade.order.id] = trade
     self.log.record(trade)
+
 
   def __thread_trade_watchdog(self):
     timestamp = time.time()
@@ -170,6 +226,9 @@ class Monitor:
       tlist = self.handle.list_trades()
  
       for trade in tlist:
+        if trade.order.id not in self.trade_list or \
+            self.trade_list[trade.order.id].status.status != trade.status.status:
+          log.record(trade)
         self.trade_list[trade.order.id] = trade
 
       time.sleep(self.refresh_sec)
@@ -191,6 +250,7 @@ class Monitor:
 
   def start(self):
     self.handle.quote.set_on_bidask_stk_v1_callback(self.__cb_bid_ask_manager)
+    self.handle.quote.set_on_tick_stk_v1_callback(self.__cb_tick_manager)
     self.__t_watchdog = threading.Thread(target = self.__thread_trade_watchdog, args=())
     self.__t_watchdog.start()
     # self.handle.set_order_callback(__trade_callback_manager)

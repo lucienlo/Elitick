@@ -15,8 +15,12 @@ class Performer:
     self.monitor = monitor
     self.strategy = strategy
 
+
   def __del__(self):
     self.is_alive = False
+    if self.__t_executor != None:
+      self.__t_executor.join()
+
 
   def __thread_action_watchdog(self):
     timestamp = time.time()

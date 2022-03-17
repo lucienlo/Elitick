@@ -4,6 +4,7 @@ import time
 import threading
 
 # pip installed
+import shioaji as sj
 from shioaji import BidAskSTKv1, Exchange
 
 # local
@@ -87,16 +88,16 @@ class Arbitrage:
     timestamp = time.time()
     while self.monitor.trade_list[sell_trade.order.id].status.status != sj.constant.Status.Filled:
       if (not self.can_earn(stock_id)) or (bidask['odd'].ask_price[0] != sell_odd_price) or (bidask['entire'].ask_price[0] != buy_entire_price):
-        self.log.warning('detect the new case, cancel the submitted sell order')
-        cancel_trade = stock.cancel_order(sell_trade)
-        self.log.verbose(str(cancel_trade))
+        self.log.warning('detect the \'' + stock_id + '\' new case, try to cancel the submitted sell order')
+        if stock.cancel_order(sell_trade):
+          self.log.info('cancel \'' + stock_id + '\' sell order done!')
 
         self.transcation_mutex[stock_id].release()
         return False
       # print the message peroidly
       time.sleep(0.001)
       if (time.time() - timestamp) >= 2:
-        self.log.info('wait for ' + str(sell_trade.order) + ' deal')
+        self.log.verbose('wait for ' + str(sell_trade.order) + ' deal')
         timestamp = time.time()
 
     # BUY: register buy entire stocks
