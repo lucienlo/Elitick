@@ -76,10 +76,12 @@ class MockStock(Register.Stock):
       "odd" : BidAskSTKv1(
         code = '2330',
         datetime = datetime.datetime(2021, 7, 2, 13, 17, 45, 743299),
-        bid_price = [Decimal('593'), Decimal('592'), Decimal('591'), Decimal('590'), Decimal('589')], 
+        # bid_price = [Decimal('593'), Decimal('592'), Decimal('591'), Decimal('590'), Decimal('589')],
+        bid_price = [Decimal('590'), Decimal('592'), Decimal('591'), Decimal('590'), Decimal('589')],  
         bid_volume = [59391, 224490, 74082, 68570, 125246], 
         diff_bid_vol = [49874, 101808, 23863, 38712, 77704], 
         ask_price = [Decimal('594'), Decimal('595'), Decimal('596'), Decimal('597'), Decimal('598')], 
+        # ask_price = [Decimal('594'), Decimal('595'), Decimal('596'), Decimal('597'), Decimal('598')],
         ask_volume = [26355, 9680, 18087, 11773, 3568], 
         diff_ask_vol = [13251, -14347, 39249, -20397, -10591], 
         suspend = 0, 
@@ -110,6 +112,7 @@ class MockStock(Register.Stock):
       cb = self.trade_cb
     )
     trade = Trade(contract = g_trade.contract, order = order, status = g_trade.status)
+    self.log.verbose(str(trade))
 
     return trade
 
@@ -128,6 +131,8 @@ class MockStock(Register.Stock):
       cb = self.trade_cb
     )
     trade = Trade(contract = g_trade.contract, order = order, status = g_trade.status)
+    self.log.verbose(str(trade))
+
     return g_trade
 
 

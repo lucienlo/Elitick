@@ -17,8 +17,8 @@ from src.Test.ArbitrageTest import *
 
 account = Account()
 log = None
-# filter_out = ['3227', '00673R']
-filter_out = []
+filter_out = ['00673R']
+# filter_out = []
 
 def main():
   log = Logger('Main')

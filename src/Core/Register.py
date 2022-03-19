@@ -183,6 +183,50 @@ class Stock:
     return trade
 
 
+  def get_above_price(self, base: float) -> float:
+    if 0.01 <= base and base < 10:
+      return round(base + 0.01, 2)
+
+    elif 10 <= base and base < 50:
+      return round(base + 0.05, 2)
+
+    elif 50 <= base and base < 100:
+      return round(base + 0.1, 1)
+
+    elif 100 <= base and base < 500:
+      return round(base + 0.5, 1)
+
+    elif 500 <= base and base < 1000:
+      return round(base + 1, 0)
+
+    elif 1000 <= base:
+      return round(base + 5, 0)
+
+    return -1
+
+
+  def get_below_price(self, base: float) -> float:
+    if 0.01 < base and base <= 10:
+      return round(base - 0.01, 2)
+
+    elif 10 < base and base <= 50:
+      return round(base - 0.05, 2)
+
+    elif 50 < base and base <= 100:
+      return round(base - 0.1, 1)
+
+    elif 100 < base and base <= 500:
+      return round(base - 0.5, 1)
+
+    elif 500 < base and base <= 1000:
+      return round(base - 1, 0)
+
+    elif 1000 < base:
+      return round(base - 5, 0)
+
+    return -1
+
+
 class Monitor:
   def __init__(self, handle: Shioaji, refresh_sec: float = 0.05):
     self.log = Logger(self.__class__.__name__)
@@ -228,7 +272,7 @@ class Monitor:
       for trade in tlist:
         if trade.order.id not in self.trade_list or \
             self.trade_list[trade.order.id].status.status != trade.status.status:
-          log.record(trade)
+          self.log.record(trade)
         self.trade_list[trade.order.id] = trade
 
       time.sleep(self.refresh_sec)
