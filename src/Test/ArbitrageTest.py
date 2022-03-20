@@ -11,8 +11,9 @@ class ArbitrageTest:
     self.mointor = MockMonitor(self.handle)
 
   def test_all(self):
-    self.test_can_earn()
-    self.test_action()
+    # self.test_can_earn()
+    # self.test_action()
+    self.test_monitor_simulation()
 
   def test_can_earn(self):
     component = Arbitrage(self.mointor)
@@ -26,4 +27,8 @@ class ArbitrageTest:
     component.action('2330')
     component.action('2330')
     component.action('2330')
+
+
+  def test_monitor_simulation(self):
+    self.mointor.start()
 

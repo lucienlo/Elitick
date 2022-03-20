@@ -245,12 +245,12 @@ class Monitor:
       self.__t_watchdog.join()
 
 
-  def __cb_bid_ask_manager(self, exchange: Exchange, bidask: BidAskSTKv1):
+  def _cb_bid_ask_manager(self, exchange: Exchange, bidask: BidAskSTKv1):
     self.stock_list[bidask.code].update_bid_ask(bidask)
     self.log.record(bidask)
 
 
-  def __cb_tick_manager(self, exchange: Exchange, tick:TickSTKv1):
+  def _cb_tick_manager(self, exchange: Exchange, tick:TickSTKv1):
     self.stock_list[tick.code].update_tick(tick)
     self.log.record(tick)
 
@@ -293,8 +293,8 @@ class Monitor:
 
 
   def start(self):
-    self.handle.quote.set_on_bidask_stk_v1_callback(self.__cb_bid_ask_manager)
-    self.handle.quote.set_on_tick_stk_v1_callback(self.__cb_tick_manager)
+    self.handle.quote.set_on_bidask_stk_v1_callback(self._cb_bid_ask_manager)
+    self.handle.quote.set_on_tick_stk_v1_callback(self._cb_tick_manager)
     self.__t_watchdog = threading.Thread(target = self.__thread_trade_watchdog, args=())
     self.__t_watchdog.start()
     # self.handle.set_order_callback(__trade_callback_manager)

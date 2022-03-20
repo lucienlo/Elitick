@@ -6,7 +6,6 @@ from datetime import datetime, timezone, timedelta
 
 tz = timezone(timedelta(hours=+8))
 
-debug = True
 
 class Logger:
   def __show(self, type:str, msg: str):
@@ -16,9 +15,10 @@ class Logger:
     print(formatted)
 
 
-  def __init__(self, label: str):
+  def __init__(self, label: str, debug: bool = True):
     self.file = LogInstance(str(datetime.now(tz).strftime("%Y%m%d%H%M%S")))
     self.label = label
+    self.debug = debug
     self.tid = 0
 
     try:
@@ -39,7 +39,7 @@ class Logger:
 
 
   def verbose(self, msg: str):
-    if debug:
+    if self.debug:
       self.__show('V', msg)
 
 

@@ -6,6 +6,8 @@ from shioaji.order import OrderStatus, Trade, Order
 from src.Core import Register
 from src.Utils.Logger import *
 import datetime
+import sched
+import time
 
 g_trade = Trade(contract = sj.contracts.Stock(
         exchange=sj.constant.Exchange.TSE, 
@@ -33,9 +35,10 @@ g_trade = Trade(contract = sj.contracts.Stock(
         deals=[])
     )
 
+
 class MockStock(Register.Stock):
   def __init__(self, handle, stock_id: str, available_entire_quantity: float):
-    self.log = Logger(self.__class__.__name__)
+    self.log = Logger(self.__class__.__name__, debug = False)
 
     self.bidask_mutex = threading.Lock()
 
@@ -49,11 +52,11 @@ class MockStock(Register.Stock):
     self.available_entire_quantity = available_entire_quantity
 
   def cancel_order(self, trade):
-    log.verbose('cancel_order')
+    self.log.verbose('cancel_order')
     return True
 
   def set_subscriber(self, trade_cb):
-    log.verbose('set_subscriber')
+    self.log.verbose('set_subscriber')
 
   def get_bid_ask(self, key = None):
     if self.id != '2330':
@@ -92,10 +95,10 @@ class MockStock(Register.Stock):
     return self.bidask
 
   def update_bid_ask(self, bidask: BidAskSTKv1):
-    log.verbose('update_bid_ask')
+    self.log.verbose('update_bid_ask')
 
   def sync_order(self):
-    log.verbose('sync_order')
+    self.log.verbose('sync_order')
     return True
 
   def execute_buy_order(self, price: float, quantity: int, is_odd: bool) -> Trade:
@@ -139,8 +142,11 @@ class MockStock(Register.Stock):
 class MockMonitor(Register.Monitor):
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
+    self.base_time = None
+    self.schedule = sched.scheduler(time.time, time.sleep)
     self.streaming = dict()
     self.__load_simulation_data('/home/work/src/Test/Asset/simulation.pkl')
+    self.__set_bid_ask_streaming(obj_type = BidAskSTKv1)
 
 
   def __load_simulation_data(self, path):
@@ -155,9 +161,32 @@ class MockMonitor(Register.Monitor):
     self.log.info('load simulation data done!')
 
 
+  def __set_bid_ask_streaming(self, obj_type):
+    self.log.info('set bid & ask simulation streaming')
+
+    self.base_time = None
+    for event in self.streaming[obj_type]:
+      if self.base_time == None:
+        self.base_time = event.datetime.timestamp()
+
+      if self.get_stock(event.code) == None:
+        self.add_subscriber(event.code)
+
+      new_ts = event.datetime.timestamp() - self.base_time
+      self.schedule.enter(new_ts, 0, self._cb_bid_ask_manager,(None, event))
+
+    self.log.info('set bid & ask simulation streaming done!')
+
+
   def get_stock(self, stock_id: str):
     self.trade_list['2bc5ae85'] = g_trade
     if stock_id not in self.stock_list:
       self.stock_list[stock_id] = MockStock(self.handle, stock_id, 2)
     return self.stock_list[stock_id]
+
+
+  def start(self):
+    super().start()
+    self.schedule.run()
+
   
